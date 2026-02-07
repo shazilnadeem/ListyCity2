@@ -1,31 +1,27 @@
-package com.example.listycity;
+package com.example.listycity2;
 
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AddCityFragment.OnFragmentInteractionListener {
     private ListView city_liist;
     private EditText input_city;
     private Button add_city_button;
     private Button delete_city_butto;
     private Button confirm_button;
-    private ArrayList<String> dataList;
-    private ArrayAdapter<String> cityAdapter;
+    private ArrayList<City> dataList;
+    private CustomList cityAdapter;
+    private long lastClickTime = 0;
 
     private int curr_selected_index = -1;
 
@@ -43,53 +39,54 @@ public class MainActivity extends AppCompatActivity {
         confirm_button = findViewById(R.id.button_confirm);
 
         dataList = new ArrayList<>();
-        dataList.add("Islamabad");
-        dataList.add("Newyork");
-        dataList.add("Helsinki");
-        dataList.add("taxila");
+        dataList.add(new City("Islamabad", "ICT"));
+        dataList.add(new City("New York", "NY"));
+        dataList.add(new City("Helsinki", "Uusimaa"));
+        dataList.add(new City("Taxila", "Punjab"));
 
 
-        cityAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_activated_1, dataList);
+        cityAdapter = new CustomList(this, dataList);
 
         city_liist.setAdapter(cityAdapter);
 
         city_liist.setOnItemClickListener((parent, view, position, id) -> {
-            curr_selected_index = position;
-            city_liist.setItemChecked(position, true);
+            long clickTime = System.currentTimeMillis();
+            if (clickTime - lastClickTime < 300 && curr_selected_index == position) {
+                City selectedCity = dataList.get(position);
+                AddCityFragment.newInstance(selectedCity).show(getSupportFragmentManager(), "EDIT_CITY");
+            } else {
+                curr_selected_index = position;
+                cityAdapter.setSelectedPosition(position);
+                Toast.makeText(this, "Double click to edit", Toast.LENGTH_SHORT).show();
+            }
+            lastClickTime = clickTime;
         });
-
 
         add_city_button.setOnClickListener(v -> {
-            input_city.setVisibility(View.VISIBLE);
-            confirm_button.setVisibility(View.VISIBLE);
-            input_city.setText("");
-            input_city.requestFocus();
+            curr_selected_index = -1;
+            new AddCityFragment().show(getSupportFragmentManager(), "ADD_CITY");
         });
 
-        confirm_button.setOnClickListener(v -> addCity());
         delete_city_butto.setOnClickListener(v -> deleteSelectedCity());
+
+        findViewById(R.id.main).setOnClickListener(v -> {
+            curr_selected_index = -1;
+            cityAdapter.setSelectedPosition(-1);
+        });
 
 
     }
 
 
-    private void addCity() {
-        String city = input_city.getText().toString().trim();
-
-        if (city.isEmpty()) {
-            Toast.makeText(this, "Pls Enter a city name", Toast.LENGTH_SHORT).show();
-            return;
+    @Override
+    public void onOkPressed(City newCity) {
+        if (curr_selected_index == -1) {
+            dataList.add(newCity);
+        } else {
+            dataList.set(curr_selected_index, newCity);
+            curr_selected_index = -1;
         }
-
-        dataList.add(city);
         cityAdapter.notifyDataSetChanged();
-
-        input_city.setText("");
-        input_city.setVisibility(View.GONE);
-        confirm_button.setVisibility(View.GONE);
-
-        curr_selected_index = -1;
-        city_liist.clearChoices();
     }
 
     private void deleteSelectedCity() {
@@ -99,10 +96,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         dataList.remove(curr_selected_index);
+        cityAdapter.setSelectedPosition(-1);
         cityAdapter.notifyDataSetChanged();
 
         curr_selected_index = -1;
-        city_liist.clearChoices();
     }
 
 }
