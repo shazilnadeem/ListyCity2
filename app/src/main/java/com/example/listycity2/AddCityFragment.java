@@ -16,7 +16,6 @@ public class AddCityFragment extends DialogFragment {
     private EditText provinceNameInput;
     private OnFragmentInteractionListener listener;
 
-    // Interface to send data back to MainActivity
     public interface OnFragmentInteractionListener {
         void onOkPressed(City newCity);
     }
@@ -31,7 +30,6 @@ public class AddCityFragment extends DialogFragment {
         }
     }
 
-    // Method to create a new instance with a City object (for editing)
     static AddCityFragment newInstance(City city) {
         Bundle args = new Bundle();
         args.putSerializable("city", city);
@@ -47,7 +45,6 @@ public class AddCityFragment extends DialogFragment {
         cityNameInput = view.findViewById(R.id.city_name_edit);
         provinceNameInput = view.findViewById(R.id.province_name_edit);
 
-        // Check if we are editing (populate fields)
         if (getArguments() != null) {
             City city = (City) getArguments().getSerializable("city");
             if (city != null) {
@@ -65,7 +62,6 @@ public class AddCityFragment extends DialogFragment {
                     String city = cityNameInput.getText().toString();
                     String province = provinceNameInput.getText().toString();
 
-                    // Send the new/updated object back to MainActivity
                     listener.onOkPressed(new City(city, province));
                 }).create();
     }
